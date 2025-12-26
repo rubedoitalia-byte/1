@@ -1,14 +1,14 @@
 // ==UserScript==
-// @name         SLY 7.32
+// @name         SLY Assistant
 // @namespace    http://tampermonkey.net/
-// @version      0.7.32
+// @version      0.7.34
 // @description  try to take over the world!
 // @author       SLY w/ Contributions by niofox, SkyLove512, anthonyra, [AEP] Valkynen, Risingson, Swift42
 // @match        https://*.based.staratlas.com/
 // @require      https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js#sha256=a759deca1b65df140e8dda5ad8645c19579536bf822e5c0c7e4adb7793a5bd08
-// @require      https://raw.githubusercontent.com/JumpFuture/7.32/main/anchor-browserified.js#sha256=f29ef75915bcf59221279f809eefc55074dbebf94cf16c968e783558e7ae3f0a
-// @require      https://raw.githubusercontent.com/JumpFuture/7.32/main/buffer-browserified.js#sha256=4fa88e735f9f1fdbff85f4f92520e8874f2fec4e882b15633fad28a200693392
-// @require      https://raw.githubusercontent.com/JumpFuture/7.32/main/bs58-browserified.js#sha256=87095371ec192e5a0e50c6576f327eb02532a7c29f1ed86700a2f8fb5018d947
+// @require      https://raw.githubusercontent.com/JumpFuture/0.7.34/main/anchor-browserified.js#sha256=f29ef75915bcf59221279f809eefc55074dbebf94cf16c968e783558e7ae3f0a
+// @require      https://raw.githubusercontent.com/JumpFuture/0.7.34/main/buffer-browserified.js#sha256=4fa88e735f9f1fdbff85f4f92520e8874f2fec4e882b15633fad28a200693392
+// @require      https://raw.githubusercontent.com/JumpFuture/0.7.34/main/bs58-browserified.js#sha256=87095371ec192e5a0e50c6576f327eb02532a7c29f1ed86700a2f8fb5018d947
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=staratlas.com
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -487,7 +487,16 @@
 	let currentFee = globalSettings.priorityFee; //autofee
 
 	let sageProgram = new BrowserAnchor.anchor.Program(sageIDL, sageProgramPK, anchorProvider);
-	let [sageGameAcct] = await sageProgram.account.game.all();
+	//let [sageGameAcct] = await sageProgram.account.game.all();
+    let sageGameAccts = await sageProgram.account.game.all();
+    let sageGameAcct = null;
+    for (let curAcct of sageGameAccts) {
+        if(curAcct.account.gameState.toString()!='11111111111111111111111111111111') {
+            sageGameAcct = curAcct;
+            break;
+        }
+    }
+
 	let cargoStatsDefinitionAcctPK = sageGameAcct.account.cargo.statsDefinition;
 	let [sageSDUTrackerAcct] = await sageProgram.account.surveyDataUnitTracker.all();
 	let profileProgram = new BrowserAnchor.anchor.Program(profileIDL, profileProgramPK, anchorProvider);
@@ -1484,7 +1493,7 @@ async function signatureStatusHandler() {
 			// If something goes wrong, we reject each request. If a promise of the queue was already resolved in the "try" block, the reject does (correctly) nothing and won't throw an error			
 			logError('Error: Rejecting all signature checks - ' + error);
 			for (const req of currentHashes) {
-				req.reject(err);
+				req.reject(error);
 			}
 		}
 	}
